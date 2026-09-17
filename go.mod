@@ -1,4 +1,4 @@
-module example/vader
+module vader
 
 go 1.27.0
 
