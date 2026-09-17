@@ -114,15 +114,30 @@ func main() {
 }
 
 // Function to process input textbox, we expose this function to JS
-func processText(this js.Value, args []js.Value) any {
+func validateText(this js.Value, args []js.Value) any {
 	// Get input from textbox
 	if len(args) < 1 {
 		return ""
 	}
-	txtInput := args[0].String()
+	txtInputStr := args[0].String()
+
+	// Convert input text from string to bytes
+	txtInputBytes := []byte(txtInputStr)
+
+	// Unmarshal: parse into struct
+	var regmap Regmap
+	err = toml.Unmarshal(txtInputBytes, &regmap)
+	if err != nil {
+		// Return error to log textbox
+		return js.ValueOf(map[string]any {
+			"error": fmt.Sprintf("[FATAL] Failed to unmarshal toml file: %v", err),
+			"result": ""
+		})
+	}
 
 	// TODO: Validate toml text
-	result := "Go WASM processed: " + txtInput
-
-	return result
+	return js.ValueOf(map[string]any {
+		"error": "",
+		"result": "[INFO] Successfully unmarshal toml file."
+	})
 }

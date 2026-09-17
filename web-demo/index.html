@@ -66,7 +66,7 @@
                 go.run(result.instance); // Start the Go background channel
                 logMessage("SUCCESS: Go WebAssembly loaded and ready.");
                 inputBox.disabled = false; // Enable typing now that backend is live
-                inputBox.placeholder = "Type or paste your text here...";
+                inputBox.placeholder = "Type or paste your TOML here...";
             })
             .catch((err) => {
                 logMessage(`ERROR: Failed to load WebAssembly: ${err}`);
@@ -80,9 +80,9 @@
             if (typeof goProcessText === 'function') {
                 try {
                     // Call the Go function directly from JavaScript
-                    const result = goProcessText(text);
-                    outputBox.value = result;
-                    logMessage(`Wasm executed successfully. Length: ${text.length} chars.`);
+                    const response = goProcessText(text);
+                    outputBox.value = "Go WASM processed";
+                    logMessage(`${response.error}`);
                 } catch (err) {
                     logMessage(`Runtime execution error: ${err}`);
                 }
