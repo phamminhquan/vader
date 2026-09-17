@@ -1,13 +1,13 @@
 package main
 
 import (
-	//"fmt"
+	"fmt"
 	//"log"
 	//"os"
 	//"sync"
 	"syscall/js"
 
-	//"github.com/pelletier/go-toml/v2"
+	"github.com/pelletier/go-toml/v2"
 )
 
 type Bitfield struct {
@@ -106,7 +106,7 @@ func main() {
 	
 
 	// Expose the Go function to the browser window object
-	js.Global().Set("goProcessText", js.FuncOf(processText))
+	js.Global().Set("goProcessText", js.FuncOf(validateText))
 
 	// Block forever to keep instance alive
 	select {}
@@ -126,18 +126,18 @@ func validateText(this js.Value, args []js.Value) any {
 
 	// Unmarshal: parse into struct
 	var regmap Regmap
-	err = toml.Unmarshal(txtInputBytes, &regmap)
+	err := toml.Unmarshal(txtInputBytes, &regmap)
 	if err != nil {
 		// Return error to log textbox
 		return js.ValueOf(map[string]any {
 			"error": fmt.Sprintf("[FATAL] Failed to unmarshal toml file: %v", err),
-			"result": ""
+			"result": "",
 		})
 	}
 
 	// TODO: Validate toml text
 	return js.ValueOf(map[string]any {
 		"error": "",
-		"result": "[INFO] Successfully unmarshal toml file."
+		"result": "[INFO] Successfully unmarshal toml file.",
 	})
 }
