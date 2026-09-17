@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sync"
+	//"sync"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -68,61 +68,8 @@ func main() {
 		regmap.Registers[id].ID = id
 	}
 
-	// Make error channel and wait group for validation workers
-	errChan := make(chan error, len(regmap.Bitfields) + len(regmap.Registers) + 3)
-	var wg sync.WaitGroup
-
-	// Launch module definition validation workers
-	wg.Add(1)
-	go ValidateModuleDefinition(&regmap, errChan, &wg)
-
-	// Launch bitfield validation workers as goroutines
-	for i, _ := range regmap.Bitfields {
-		wg.Add(1)
-		go ValidateBitfield(&regmap.Bitfields[i], errChan, &wg)
-	}
-
-	// Launch bitfield name overlap validation workers
-	wg.Add(1)
-	go ValidateBitfieldUnique(&regmap.Bitfields, errChan, &wg)
-
-	// Launch register validation workers as goroutines
-	for i, _ := range regmap.Registers {
-		wg.Add(1)
-		go ValidateRegister(&regmap.Registers[i], &regmap, errChan, &wg)
-	}
-
-	// Launch register address overlap validation workers
-	wg.Add(1)
-	go ValidateRegisterAddressOverlap(&regmap, errChan, &wg)
-
-	// Launch a background goroutine ONLY to close the channels
-	go func() {
-		wg.Wait()
-		close(errChan) // Safely breaks the loop in error collection
-	}()
-
-	// Collecting errors
-	var collectedErrors []error
-	for err = range errChan { // This loop runs (blocking) till errChan is closed
-		if err != nil {
-			collectedErrors = append(collectedErrors, err)
-		}
-	}
-
-	// Print error and exit if there is error
-	if len(collectedErrors) > 0 {
-		fmt.Printf("[ERROR] VALIDATION FAILED: %d bitfields have errors.\n",
-			len(collectedErrors))
-		// Loop through each error and print
-		for _, err := range collectedErrors {
-			fmt.Printf("%v\n", err)
-		}
-		// Stop the program and exit with error status code (non-zero)
-		//os.Exit(1)
-	} else {
-		fmt.Printf("[INFO] VALIDATION PASSED.\n")
-	}
+	// Validate the TOML input (validator.go)
+	Validate(&regmap)
 	
 	//// Print back the toml
 	//fmt.Printf("Print back data in TOML.\n")
@@ -136,25 +83,25 @@ func main() {
 	//	fmt.Printf("\tAccess: %s\n", bf.Access)
 	//}
 
-	for _, reg := range regmap.Registers {
-		fmt.Printf("Register:\n")
-		fmt.Printf("\tID: %d\n", reg.ID)
-		fmt.Printf("\tName: %s\n", reg.Name)
-		fmt.Printf("\tAddress: 0x%08x\n", *reg.Address)
-		fmt.Printf("\tRepetition:")
-		fmt.Printf("\tTimes: %d", *reg.Repetition.Times)
-		fmt.Printf("\tAddress Increment: 0x%08x\n", *reg.Repetition.AddressIncrement)
-		fmt.Printf("\tBitfield Reference:\n")
-		for _, ref := range reg.BitfieldReference {
-			fmt.Printf("\t\tRegister Offset: %d", *ref.RegOffset)
-			fmt.Printf("\tSlice Start Index: %d", *ref.SliceStartIdx)
-			fmt.Printf("\tSlice Width: %d", *ref.SliceWidth)
-			fmt.Printf("\tBitfield Name: %s\n", ref.BfName)
-		}
-	}
+	//for _, reg := range regmap.Registers {
+	//	fmt.Printf("Register:\n")
+	//	fmt.Printf("\tID: %d\n", reg.ID)
+	//	fmt.Printf("\tName: %s\n", reg.Name)
+	//	fmt.Printf("\tAddress: 0x%08x\n", *reg.Address)
+	//	fmt.Printf("\tRepetition:")
+	//	fmt.Printf("\tTimes: %d", *reg.Repetition.Times)
+	//	fmt.Printf("\tAddress Increment: 0x%08x\n", *reg.Repetition.AddressIncrement)
+	//	fmt.Printf("\tBitfield Reference:\n")
+	//	for _, ref := range reg.BitfieldReference {
+	//		fmt.Printf("\t\tRegister Offset: %d", *ref.RegOffset)
+	//		fmt.Printf("\tSlice Start Index: %d", *ref.SliceStartIdx)
+	//		fmt.Printf("\tSlice Width: %d", *ref.SliceWidth)
+	//		fmt.Printf("\tBitfield Name: %s\n", ref.BfName)
+	//	}
+	//}
 	
-	// Write the SV code
-	//WriteSv("regmap.sv", regmap)
+	// Generate RTL (rtl-generator.go)
+	//GenRTL("regmap.sv", regmap)
 	
 }
 

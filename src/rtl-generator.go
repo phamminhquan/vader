@@ -7,7 +7,7 @@ import (
 )
 
 // Function to write SV file using info in regmap
-func WriteSv(filePath string, regmap Regmap) {
+func GenRTL(filePath string, regmap Regmap) {
 	// Create SV file (or overwrite)
 	svFile, err := os.Create(filePath)
 	if err != nil {

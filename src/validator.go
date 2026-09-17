@@ -8,6 +8,66 @@ import (
 	"strings"
 )
 
+// Function that calls all the validation workers
+// Should be sequentially called in main
+func Validate(regmap *Regmap) {
+	// Make error channel and wait group for validation workers
+	errChan := make(chan error, len(regmap.Bitfields) + len(regmap.Registers) + 3)
+	var wg sync.WaitGroup
+
+	// Launch module definition validation workers
+	wg.Add(1)
+	go ValidateModuleDefinition(regmap, errChan, &wg)
+
+	// Launch bitfield validation workers as goroutines
+	for i, _ := range regmap.Bitfields {
+		wg.Add(1)
+		go ValidateBitfield(&regmap.Bitfields[i], errChan, &wg)
+	}
+
+	// Launch bitfield name overlap validation workers
+	wg.Add(1)
+	go ValidateBitfieldUnique(&regmap.Bitfields, errChan, &wg)
+
+	// Launch register validation workers as goroutines
+	for i, _ := range regmap.Registers {
+		wg.Add(1)
+		go ValidateRegister(&regmap.Registers[i], regmap, errChan, &wg)
+	}
+
+	// Launch register address overlap validation workers
+	wg.Add(1)
+	go ValidateRegisterAddressOverlap(regmap, errChan, &wg)
+
+	// Launch a background goroutine ONLY to close the channels
+	go func() {
+		wg.Wait()
+		close(errChan) // Safely breaks the loop in error collection
+	}()
+
+	// Collecting errors
+	var collectedErrors []error
+	for err := range errChan { // This loop runs (blocking) till errChan is closed
+		if err != nil {
+			collectedErrors = append(collectedErrors, err)
+		}
+	}
+
+	// Print error and exit if there is error
+	if len(collectedErrors) > 0 {
+		fmt.Printf("[ERROR] VALIDATION FAILED: %d bitfields have errors.\n",
+			len(collectedErrors))
+		// Loop through each error and print
+		for _, err := range collectedErrors {
+			fmt.Printf("%v\n", err)
+		}
+		// Stop the program and exit with error status code (non-zero)
+		//os.Exit(1)
+	} else {
+		fmt.Printf("[INFO] VALIDATION PASSED.\n")
+	}
+}
+
 // Function to validate module definition
 func ValidateModuleDefinition(regmap *Regmap, errChan chan <- error, wg *sync.WaitGroup) {
 	// Execute when function returns
