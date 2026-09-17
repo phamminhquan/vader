@@ -22,7 +22,7 @@ jobs:
         go-version: '1.27'
 
     - name: Build
-      run: go build -o example/vader -v ./... 
+      run: GOOS=js GOARCH=wasm go build -o web-demo/main.wasm ./src/
 
     - name: Test
       run: go test -v ./...
