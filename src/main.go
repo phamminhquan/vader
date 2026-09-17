@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"os"
+	//"fmt"
+	//"log"
+	//"os"
 	//"sync"
+	"syscall/js"
 
-	"github.com/pelletier/go-toml/v2"
+	//"github.com/pelletier/go-toml/v2"
 )
 
 type Bitfield struct {
@@ -41,35 +42,35 @@ type Regmap struct {
 }
 
 func main() {
-	// Read raw toml file
-	fileBytes, err := os.ReadFile("example/example-regmap.toml")
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to read file: %v", err)
-		panic(err)
-	}
-	fmt.Printf("[INFO] Read raw TOML file: regmap.toml.\n")
-	
-	// Unmarshal: parse into struct
-	var regmap Regmap
-	err = toml.Unmarshal(fileBytes, &regmap)
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to unmarshal toml file: %v", err)
-		panic(err)
-	}
-	fmt.Printf("[INFO] Unmarshal TOML file to struct.\n")
+	//// Read raw toml file
+	//fileBytes, err := os.ReadFile("example/example-regmap.toml")
+	//if err != nil {
+	//	log.Fatalf("[FATAL] Failed to read file: %v", err)
+	//	panic(err)
+	//}
+	//fmt.Printf("[INFO] Read raw TOML file: regmap.toml.\n")
+	//
+	//// Unmarshal: parse into struct
+	//var regmap Regmap
+	//err = toml.Unmarshal(fileBytes, &regmap)
+	//if err != nil {
+	//	log.Fatalf("[FATAL] Failed to unmarshal toml file: %v", err)
+	//	panic(err)
+	//}
+	//fmt.Printf("[INFO] Unmarshal TOML file to struct.\n")
 
-	// Assign ID to bitfields as order in the array
-	for id, _ := range regmap.Bitfields {
-		regmap.Bitfields[id].ID = id
-	}
+	//// Assign ID to bitfields as order in the array
+	//for id, _ := range regmap.Bitfields {
+	//	regmap.Bitfields[id].ID = id
+	//}
 
-	// Assign ID to registers as order in the array
-	for id, _ := range regmap.Registers {
-		regmap.Registers[id].ID = id
-	}
+	//// Assign ID to registers as order in the array
+	//for id, _ := range regmap.Registers {
+	//	regmap.Registers[id].ID = id
+	//}
 
 	// Validate the TOML input (validator.go)
-	Validate(&regmap)
+	//Validate(&regmap)
 	
 	//// Print back the toml
 	//fmt.Printf("Print back data in TOML.\n")
@@ -103,5 +104,25 @@ func main() {
 	// Generate RTL (rtl-generator.go)
 	//GenRTL("regmap.sv", regmap)
 	
+
+	// Expose the Go function to the browser window object
+	js.Global().Set("goProcessText", js.FuncOf(processText))
+
+	// Block forever to keep instance alive
+	select {}
+	
 }
 
+// Function to process input textbox, we expose this function to JS
+func processText(this js.Value, args []js.Value) any {
+	// Get input from textbox
+	if len(args) < 1 {
+		return ""
+	}
+	txtInput := args[0].String()
+
+	// TODO: Validate toml text
+	result := "Go WASM processed: " + txtInput
+
+	return result
+}

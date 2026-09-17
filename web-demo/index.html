@@ -1,8 +1,94 @@
 <!DOCTYPE html>
-<html>
-  <body>
-    <h1>
-      Welcome to my Go Project Site!
-    </h1>
-  </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go WebAssembly Interface</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex; flex-direction: column; height: 100vh;
+            background-color: #f6f8fa; color: #24292f;
+        }
+        .top-container { display: flex; flex: 1; min-height: 0; }
+        .column { flex: 1; display: flex; flex-direction: column; padding: 15px; }
+        .column:first-child { border-right: 1px solid #d0d7de; }
+        .bottom-log { height: 200px; display: flex; flex-direction: column; padding: 15px; border-top: 2px solid #d0d7de; background-color: #ffffff; }
+        label { font-weight: 600; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; color: #57606a; }
+        textarea {
+            width: 100%; flex: 1; padding: 12px; border: 1px solid #d0d7de; border-radius: 6px;
+            font-family: monospace; font-size: 14px; line-height: 1.5; resize: none; outline: none;
+        }
+        textarea:focus { border-color: #0969da; box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3); }
+        textarea[readonly] { background-color: #f6f8fa; color: #57606a; cursor: not-allowed; }
+        #logBox { background-color: #1f2428; color: #e1e4e8; border-color: #1f2428; }
+    </style>
+    
+    <!-- 1. Include Go's WebAssembly execution bridge -->
+    <script src="wasm_exec.js"></script>
+</head>
+<body>
+
+    <div class="top-container">
+        <div class="column">
+            <label for="inputBox">Input Editor (Editable)</label>
+            <textarea id="inputBox" disabled placeholder="Loading WebAssembly backend..."></textarea>
+        </div>
+        <div class="column">
+            <label for="outputBox">Generated Result (Read-Only)</label>
+            <textarea id="outputBox" readonly placeholder="Waiting for Wasm execution..."></textarea>
+        </div>
+    </div>
+
+    <div class="bottom-log">
+        <label for="logBox">System Execution Logs (Read-Only)</label>
+        <textarea id="logBox" readonly></textarea>
+    </div>
+
+    <script>
+        const inputBox = document.getElementById('inputBox');
+        const outputBox = document.getElementById('outputBox');
+        const logBox = document.getElementById('logBox');
+
+        function logMessage(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logBox.value += `[${timestamp}] ${message}\n`;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // 2. Initialize and load Go WebAssembly
+        logMessage("Initializing WebAssembly runtime...");
+        const go = new Go();
+        
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject)
+            .then((result) => {
+                go.run(result.instance); // Start the Go background channel
+                logMessage("SUCCESS: Go WebAssembly loaded and ready.");
+                inputBox.disabled = false; // Enable typing now that backend is live
+                inputBox.placeholder = "Type or paste your text here...";
+            })
+            .catch((err) => {
+                logMessage(`ERROR: Failed to load WebAssembly: ${err}`);
+            });
+
+        // 3. Live Real-Time Event Listener
+        inputBox.addEventListener('input', (e) => {
+            const text = e.target.value;
+
+            // Ensure the Go function is mounted before calling it
+            if (typeof goProcessText === 'function') {
+                try {
+                    // Call the Go function directly from JavaScript
+                    const result = goProcessText(text);
+                    outputBox.value = result;
+                    logMessage(`Wasm executed successfully. Length: ${text.length} chars.`);
+                } catch (err) {
+                    logMessage(`Runtime execution error: ${err}`);
+                }
+            }
+        });
+    </script>
+</body>
 </html>
+

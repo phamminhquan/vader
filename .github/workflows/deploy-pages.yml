@@ -2,15 +2,13 @@ name: Deploy GitHub Pages
 
 on:
   push:
-    branches: [ "main" ] # Triggers when you push to main
+    branches: [ "main" ]
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment
 concurrency:
   group: "pages"
   cancel-in-progress: true
@@ -25,17 +23,32 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Configures the GitHub Pages environment metadata
+      # 1. Set up Go on the GitHub Actions runner
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22' # Match your local Go version
+          cache: true
+
+      # 2. Extract Go's wasm_exec.js support file automatically
+      - name: Copy Wasm Exec JS
+        run: cp $(go env GOROOT)/misc/wasm/wasm_exec.js ./website/
+
+      # 3. Compile your main.go into WebAssembly right inside the pipeline
+      - name: Compile Go to WebAssembly
+        run: GOOS=js GOARCH=wasm go build -o website/main.wasm ./src/
+
+      # 4. Configures the GitHub Pages environment metadata
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # Uploads your specific 'web-demo' folder as the page artifact
+      # 5. Upload your website folder (which now includes the freshly compiled main.wasm)
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './web-demo' 
 
-      # Deploys the uploaded artifact to the live web server
+      # 6. Push it live to the web server
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
