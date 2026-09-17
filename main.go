@@ -42,7 +42,7 @@ type Regmap struct {
 
 func main() {
 	// Read raw toml file
-	fileBytes, err := os.ReadFile("regmap.toml")
+	fileBytes, err := os.ReadFile("example-regmap.toml")
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to read file: %v", err)
 		panic(err)
