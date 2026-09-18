@@ -55,14 +55,15 @@ func Validate(regmap *Regmap) string {
 
 	// Print error and exit if there is error
 	if len(collectedErrors) > 0 {
-		combinedErrors := errors.Join(collectedErrors...)
-		valResult := make([]string, 2)
-		valResult[0] = fmt.Sprintf("[ERROR] VALIDATION FAILED: %d" +
+		valErrors := make([]string, len(collectedErrors) + 1)
+		valErrors[0] = fmt.Sprintf("[ERROR] VALIDATION FAILED: %d" +
 			"bitfields have errors.\n", len(collectedErrors))
-		valResult[1] = combinedErrors.Error()
-		// Stop the program and exit with error status code (non-zero)
-		//os.Exit(1)
-		return strings.Join(valResult, "")
+		for i, err := range collectedErrors {
+			if err != nil {
+				valErrors[1+i] = err.Error()
+			}
+		}
+		return strings.Join(valErrors, " ")
 	} else {
 		return fmt.Sprintf("[INFO] VALIDATION PASSED.\n")
 	}
