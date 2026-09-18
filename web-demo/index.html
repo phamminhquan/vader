@@ -52,7 +52,6 @@
         const logBox = document.getElementById('logBox');
 
         function logMessage(message) {
-            const timestamp = new Date().toLocaleTimeString();
             logBox.value = `${message}\n`;
             logBox.scrollTop = logBox.scrollHeight;
         }
