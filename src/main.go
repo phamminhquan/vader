@@ -106,7 +106,7 @@ func main() {
 	
 
 	// Expose the Go function to the browser window object
-	js.Global().Set("goProcessText", js.FuncOf(validateText))
+	js.Global().Set("goProcessText", js.FuncOf(processText))
 
 	// Block forever to keep instance alive
 	select {}
@@ -114,7 +114,7 @@ func main() {
 }
 
 // Function to process input textbox, we expose this function to JS
-func validateText(this js.Value, args []js.Value) any {
+func processText(this js.Value, args []js.Value) any {
 	// Get input from textbox
 	if len(args) < 1 {
 		return ""
@@ -130,14 +130,14 @@ func validateText(this js.Value, args []js.Value) any {
 	if err != nil {
 		// Return error to log textbox
 		return js.ValueOf(map[string]any {
-			"error": fmt.Sprintf("[FATAL] Failed to unmarshal toml file: %v", err),
-			"result": "",
+			"log": fmt.Sprintf("[FATAL] Failed to unmarshal toml file: %v", err),
+			"result": "Invalid TOML.",
 		})
 	}
 
 	// TODO: Validate toml text
 	return js.ValueOf(map[string]any {
-		"error": "",
+		"log": "",
 		"result": "[INFO] Successfully unmarshal toml file.",
 	})
 }

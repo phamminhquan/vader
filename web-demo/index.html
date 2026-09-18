@@ -36,13 +36,13 @@
             <textarea id="inputBox" disabled placeholder="Loading WebAssembly backend..."></textarea>
         </div>
         <div class="column">
-            <label for="outputBox">Generated Result (Read-Only)</label>
+            <label for="outputBox">Generated RTL (Read-Only)</label>
             <textarea id="outputBox" readonly placeholder="Waiting for Wasm execution..."></textarea>
         </div>
     </div>
 
     <div class="bottom-log">
-        <label for="logBox">System Execution Logs (Read-Only)</label>
+        <label for="logBox">Execution Logs (Read-Only)</label>
         <textarea id="logBox" readonly></textarea>
     </div>
 
@@ -53,7 +53,7 @@
 
         function logMessage(message) {
             const timestamp = new Date().toLocaleTimeString();
-            logBox.value += `[${timestamp}] ${message}\n`;
+            logBox.value = `${message}\n`;
             logBox.scrollTop = logBox.scrollHeight;
         }
 
@@ -81,8 +81,8 @@
                 try {
                     // Call the Go function directly from JavaScript
                     const response = goProcessText(text);
-                    outputBox.value = "Go WASM processed";
-                    logMessage(`${response.error}`);
+                    outputBox.value = response.result;
+                    logMessage(`${response.log}`);
                 } catch (err) {
                     logMessage(`Runtime execution error: ${err}`);
                 }
