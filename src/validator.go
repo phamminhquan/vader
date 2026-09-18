@@ -10,7 +10,7 @@ import (
 
 // Function that calls all the validation workers
 // Should be sequentially called in main
-func Validate(regmap *Regmap) {
+func Validate(regmap *Regmap) string {
 	// Make error channel and wait group for validation workers
 	errChan := make(chan error, len(regmap.Bitfields) + len(regmap.Registers) + 3)
 	var wg sync.WaitGroup
@@ -55,16 +55,15 @@ func Validate(regmap *Regmap) {
 
 	// Print error and exit if there is error
 	if len(collectedErrors) > 0 {
-		fmt.Printf("[ERROR] VALIDATION FAILED: %d bitfields have errors.\n",
-			len(collectedErrors))
-		// Loop through each error and print
-		for _, err := range collectedErrors {
-			fmt.Printf("%v\n", err)
-		}
+		valResult := make([]string, len(collectedErrors) + 1)
+		valResult[0] = fmt.Printf("[ERROR] VALIDATION FAILED: %d" +
+			"bitfields have errors.\n", len(collectedErrors))
+			copy(valResult[1:0], colelctedErrors)
 		// Stop the program and exit with error status code (non-zero)
 		//os.Exit(1)
+		return strings.Join(valResult, "")
 	} else {
-		fmt.Printf("[INFO] VALIDATION PASSED.\n")
+		return fmt.Sprintf("[INFO] VALIDATION PASSED.\n")
 	}
 }
 
@@ -438,7 +437,6 @@ wg *sync.WaitGroup) {
 				" registers %s.", addr, strings.Join(regNames, ", ")))
 		}
 	}
-	
 
 	// Send errors back through channel
 	if len(err) > 0 {

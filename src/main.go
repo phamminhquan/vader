@@ -136,8 +136,11 @@ func processText(this js.Value, args []js.Value) any {
 	}
 
 	// TODO: Validate toml text
+	// Validate the TOML input (validator.go)
+	valResult := Validate(&regmap)
+	
 	return js.ValueOf(map[string]any {
-		"log": "",
+		"log": valResult,
 		"result": "[INFO] Successfully unmarshal toml file.",
 	})
 }
