@@ -10,7 +10,7 @@ import (
 
 // Function that calls all the validation workers
 // Should be sequentially called in main
-func Validate(regmap *Regmap) string {
+func Validate(regmap *Regmap) (bool, string) {
 	// Make error channel and wait group for validation workers
 	errChan := make(chan error, len(regmap.Bitfields) + len(regmap.Registers) + 3)
 	var wg sync.WaitGroup
@@ -63,9 +63,9 @@ func Validate(regmap *Regmap) string {
 				valErrors[1+i] = err.Error()
 			}
 		}
-		return strings.Join(valErrors, "\n")
+		return true, strings.Join(valErrors, "\n")
 	} else {
-		return fmt.Sprintf("[INFO] VALIDATION PASSED.\n")
+		return false, fmt.Sprintf("[INFO] VALIDATION PASSED.\n")
 	}
 }
 

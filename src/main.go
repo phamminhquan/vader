@@ -132,18 +132,26 @@ func processText(this js.Value, args []js.Value) any {
 		// Return error to log textbox
 		return js.ValueOf(map[string]any {
 			"log": fmt.Sprintf("[FATAL] Failed to unmarshal toml file: %v", err),
-			"result": "Invalid TOML.",
+			"result": "Fatal TOML.",
 		})
 	}
 
 	// Validate the TOML input (validator.go)
-	valResult := Validate(&regmap)
-
-	// Generate RTL
+	valStatus, valResult := Validate(&regmap)
+	if valStatus == true {
+		// Return error to log textbox
+		return js.ValueOf(map[string]any {
+			"log": fmt.Sprintf("%s", valResult),
+			"result": "Error TOML",
+		})
+	}
 	
-
+	// Generate RTL
+	rtlGenResult := GenRTL(&regmap)
+	
+	// Return error to log textbox
 	return js.ValueOf(map[string]any {
 		"log": fmt.Sprintf("%s", valResult),
-		"result": "[INFO] Successfully unmarshal toml file.",
+		"result": rtlGenResult,
 	})
 }
