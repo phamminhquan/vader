@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	//"log"
-	//"os"
+	"log"
+	"os"
 	//"sync"
 	"syscall/js"
 
@@ -42,35 +42,36 @@ type Regmap struct {
 }
 
 func main() {
-	//// Read raw toml file
-	//fileBytes, err := os.ReadFile("example/example-regmap.toml")
-	//if err != nil {
-	//	log.Fatalf("[FATAL] Failed to read file: %v", err)
-	//	panic(err)
-	//}
-	//fmt.Printf("[INFO] Read raw TOML file: regmap.toml.\n")
-	//
-	//// Unmarshal: parse into struct
-	//var regmap Regmap
-	//err = toml.Unmarshal(fileBytes, &regmap)
-	//if err != nil {
-	//	log.Fatalf("[FATAL] Failed to unmarshal toml file: %v", err)
-	//	panic(err)
-	//}
-	//fmt.Printf("[INFO] Unmarshal TOML file to struct.\n")
+	// Read raw toml file
+	fileBytes, err := os.ReadFile("example/example-regmap.toml")
+	if err != nil {
+		log.Fatalf("[FATAL] Failed to read file: %v", err)
+		panic(err)
+	}
+	fmt.Printf("[INFO] Read raw TOML file: regmap.toml.\n")
+	
+	// Unmarshal: parse into struct
+	var regmap Regmap
+	err = toml.Unmarshal(fileBytes, &regmap)
+	if err != nil {
+		log.Fatalf("[FATAL] Failed to unmarshal toml file: %v", err)
+		panic(err)
+	}
+	fmt.Printf("[INFO] Unmarshal TOML file to struct.\n")
 
-	//// Assign ID to bitfields as order in the array
-	//for id, _ := range regmap.Bitfields {
-	//	regmap.Bitfields[id].ID = id
-	//}
+	// Assign ID to bitfields as order in the array
+	for id, _ := range regmap.Bitfields {
+		regmap.Bitfields[id].ID = id
+	}
 
-	//// Assign ID to registers as order in the array
-	//for id, _ := range regmap.Registers {
-	//	regmap.Registers[id].ID = id
-	//}
+	// Assign ID to registers as order in the array
+	for id, _ := range regmap.Registers {
+		regmap.Registers[id].ID = id
+	}
 
 	// Validate the TOML input (validator.go)
-	//Validate(&regmap)
+	valResult := Validate(&regmap)
+	fmt.Printf(valResult)
 	
 	//// Print back the toml
 	//fmt.Printf("Print back data in TOML.\n")
@@ -142,7 +143,7 @@ func processText(this js.Value, args []js.Value) any {
 	
 
 	return js.ValueOf(map[string]any {
-		"log": valResult,
+		"log": fmt.Sprintf(valResult),
 		"result": "[INFO] Successfully unmarshal toml file.",
 	})
 }

@@ -57,13 +57,13 @@ func Validate(regmap *Regmap) string {
 	if len(collectedErrors) > 0 {
 		valErrors := make([]string, len(collectedErrors) + 1)
 		valErrors[0] = fmt.Sprintf("[ERROR] VALIDATION FAILED: %d" +
-			"bitfields have errors.\n", len(collectedErrors))
+			" bitfields have errors.", len(collectedErrors))
 		for i, err := range collectedErrors {
 			if err != nil {
 				valErrors[1+i] = err.Error()
 			}
 		}
-		return strings.Join(valErrors, " ")
+		return strings.Join(valErrors, "\n")
 	} else {
 		return fmt.Sprintf("[INFO] VALIDATION PASSED.\n")
 	}
