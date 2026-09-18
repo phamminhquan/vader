@@ -5,24 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Go WebAssembly Interface</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* Basic reset and structural layout */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex; flex-direction: column; height: 100vh;
-            background-color: #f6f8fa; color: #24292f;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #0d1117; /* Dark background */
+            color: #c9d1d9; /* Off-white text */
         }
-        .top-container { display: flex; flex: 1; min-height: 0; }
-        .column { flex: 1; display: flex; flex-direction: column; padding: 15px; }
-        .column:first-child { border-right: 1px solid #d0d7de; }
-        .bottom-log { height: 200px; display: flex; flex-direction: column; padding: 15px; border-top: 2px solid #d0d7de; background-color: #ffffff; }
-        label { font-weight: 600; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; color: #57606a; }
+
+        /* Top container containing the Left and Right textboxes */
+        .top-container {
+            display: flex;
+            flex: 1; 
+            min-height: 0; 
+        }
+
+        /* Individual column styling */
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+        }
+        .column:first-child {
+            border-right: 1px solid #30363d; /* Dark border separator */
+        }
+
+        /* Bottom log section styling */
+        .bottom-log {
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            border-top: 2px solid #30363d;
+            background-color: #161b22; /* Slightly darker panel look */
+        }
+
+        /* Header label styles */
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8b949e; /* Muted gray for labels */
+        }
+
+        /* Unified textarea styles for dark mode */
         textarea {
-            width: 100%; flex: 1; padding: 12px; border: 1px solid #d0d7de; border-radius: 6px;
-            font-family: monospace; font-size: 14px; line-height: 1.5; resize: none; outline: none;
+            width: 100%;
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none; 
+            outline: none;
+            background-color: #161b22; /* Dark textarea fill */
+            color: #e6edf3; /* Crisp bright text for readability */
         }
-        textarea:focus { border-color: #0969da; box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3); }
-        textarea[readonly] { background-color: #f6f8fa; color: #57606a; cursor: not-allowed; }
-        #logBox { background-color: #1f2428; color: #e1e4e8; border-color: #1f2428; }
+        textarea:focus {
+            border-color: #58a6ff; /* Neon blue focus ring */
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+        }
+
+        /* Unique styling for read-only boxes */
+        textarea[readonly] {
+            background-color: #0d1117; /* Solid dark background */
+            color: #8b949e; /* Slightly dimmer text for read-only status */
+            cursor: not-allowed;
+        }
+        
+        /* Specific styling for the log box terminal look */
+        #logBox {
+            background-color: #010409; /* Deep terminal black */
+            color: #7ee787; /* Classic console green text */
+            border-color: #30363d;
+        }
     </style>
     
     <!-- 1. Include Go's WebAssembly execution bridge -->
