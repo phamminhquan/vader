@@ -143,7 +143,7 @@ func processText(this js.Value, args []js.Value) any {
 	
 
 	return js.ValueOf(map[string]any {
-		"log": fmt.Sprintf(valResult),
+		"log": fmt.Sprintf("%s", valResult),
 		"result": "[INFO] Successfully unmarshal toml file.",
 	})
 }
