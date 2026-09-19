@@ -57,7 +57,7 @@ func Validate(regmap *Regmap) (bool, string) {
 	if len(collectedErrors) > 0 {
 		valErrors := make([]string, len(collectedErrors) + 1)
 		valErrors[0] = fmt.Sprintf("[ERROR] VALIDATION FAILED: %d" +
-			" bitfields have errors.", len(collectedErrors))
+			" errors.", len(collectedErrors))
 		for i, err := range collectedErrors {
 			if err != nil {
 				valErrors[1+i] = err.Error()
