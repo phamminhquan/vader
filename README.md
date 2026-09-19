@@ -26,7 +26,7 @@ the required fields:
   * `name`: name of register
   * `address`: address of register for APB access
   * `repetition`: repeating the register multiple times
-    * `times`: number of repetition
+    * `times`: number of repetition (value of 1 means it is repeated once, i.e 2 in total)
     * `address-increment`: address increment for repeated registers
   * `bitfield-reference`: array of bitfields that is in this register
     * `reg-offset`: the index of the register at which this bitfield reference starts

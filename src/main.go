@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"syscall/js"
-	"github.com/pelletier/go-toml/v2"
+	"flag"
 )
 
 type Bitfield struct {
@@ -37,57 +36,22 @@ type Regmap struct {
 	Registers []Register `toml:"register"`
 }
 
-// Function to process input textbox, we expose this function to JS
-func processText(this js.Value, args []js.Value) any {
-	// Get input from textbox
-	if len(args) < 1 {
-		return ""
-	}
-	txtInputStr := args[0].String()
-
-	// Convert input text from string to bytes
-	txtInputBytes := []byte(txtInputStr)
-
-	// Unmarshal: parse into struct
-	var regmap Regmap
-	err := toml.Unmarshal(txtInputBytes, &regmap)
-	if err != nil {
-		// Return error to log textbox
-		return js.ValueOf(map[string]any {
-			"log": fmt.Sprintf("[FATAL] Failed to unmarshal toml file: %v", err),
-			"result": "Fatal TOML.",
-		})
-	}
-
-	// Validate the TOML input (validator.go)
-	valStatus, valResult := Validate(&regmap)
-	if valStatus == true {
-		// Return error to log textbox
-		return js.ValueOf(map[string]any {
-			"log": fmt.Sprintf("%s", valResult),
-			"result": "Error TOML",
-		})
-	}
-	
-	// Generate RTL
-	rtlGenResult := GenRTL(&regmap)
-	
-	// Return error to log textbox
-	return js.ValueOf(map[string]any {
-		"log": fmt.Sprintf("%s", valResult),
-		"result": rtlGenResult,
-	})
-}
-
 // Main function bind the processText to JS and keep the program alive
 func main() {
+	// Parse commandline argument using flags
+	localTestFlag := flag.Bool("test", false, "Run local test")
+
+	// Crucial: must call flag.Parse() to executre the parsing
+	flag.Parse()
+
 	// Local test
-	//LocalTest()
-
-	// Expose the Go function to the browser window object
-	js.Global().Set("goProcessText", js.FuncOf(processText))
-
-	// Block forever to keep instance alive
-	select {}
+	if *localTestFlag == true {
+		fmt.Printf("[INFO] Running local test mode.\n")
+		LocalTest()
+	} else {
+		fmt.Printf("[INFO] Running web-demo mode.\n")
+		JsBind()
+		select {}	// Block forever to keep instance alive
+	}
 }
 

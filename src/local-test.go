@@ -1,0 +1,37 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"github.com/pelletier/go-toml/v2"
+)
+
+// Function to test locally
+func LocalTest() {
+	// Read example toml
+	fileBytes, err := os.ReadFile("example/example-regmap.toml")
+	if err != nil {
+		fmt.Printf("Failed to read TOML file: %v", err)
+		return
+	}
+
+	// Unmarshal: parse into struct
+	var regmap Regmap
+	err = toml.Unmarshal(fileBytes, &regmap)
+	if err != nil {
+		fmt.Printf("Failed to unmarshal TOML: %v", err)
+		return
+	}
+
+	// Validate the TOML input (validator.go)
+	valStatus, valResult := Validate(&regmap)
+	if valStatus == true {
+		fmt.Printf("Validation Failed\n")
+		fmt.Printf("%s", valResult)
+		return
+	}
+	
+	// Generate RTL
+	fmt.Printf("%s", GenRTL(&regmap))
+	return	
+}
