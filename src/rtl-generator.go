@@ -105,12 +105,21 @@ func GenRTL(regmap *Regmap) string {
 				}
 			}
 			// Grab the strings needed from each bitfield reference for read
-			if accessMap[ref.BfName] == "RW" || accessMap[ref.BfName] == "RO" {
+			if accessMap[ref.BfName] == "RW" {
 				if *ref.SliceWidth == 1 {
 					bitfieldReadStr += fmt.Sprintf("  rdata_%s[%d] = O_%s[%d];\n",
 						reg.Name, *ref.RegOffset, ref.BfName, *ref.SliceStartIdx)
 				} else {
 					bitfieldReadStr += fmt.Sprintf("  rdata_%s[%d:%d] = O_%s[%d:%d];\n",
+						reg.Name, *ref.RegOffset + *ref.SliceWidth - 1, *ref.RegOffset,
+						ref.BfName, *ref.SliceStartIdx + *ref.SliceWidth - 1, *ref.SliceWidth)
+				}
+			} else if accessMap[ref.BfName] == "RO" {
+				if *ref.SliceWidth == 1 {
+					bitfieldReadStr += fmt.Sprintf("  rdata_%s[%d] = I_%s[%d];\n",
+						reg.Name, *ref.RegOffset, ref.BfName, *ref.SliceStartIdx)
+				} else {
+					bitfieldReadStr += fmt.Sprintf("  rdata_%s[%d:%d] = I_%s[%d:%d];\n",
 						reg.Name, *ref.RegOffset + *ref.SliceWidth - 1, *ref.RegOffset,
 						ref.BfName, *ref.SliceStartIdx + *ref.SliceWidth - 1, *ref.SliceWidth)
 				}
