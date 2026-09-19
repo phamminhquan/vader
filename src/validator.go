@@ -89,6 +89,18 @@ func ValidateModuleDefinition(regmap *Regmap, errChan chan <- error, wg *sync.Wa
 			" register width is 0 or not explicitly declared."))
 	}
 
+	// Rule: No bitfields declared
+	if len(regmap.Bitfields) == 0 {
+		err = append(err, fmt.Errorf("[ERROR] Module definition:" +
+			" no bitfield was declared."))
+	}
+
+	// Rule: No registers declared
+	if len(regmap.Registers) == 0 {
+		err = append(err, fmt.Errorf("[ERROR] Module definition:" +
+			" no bitfield was declared."))
+	}
+
 	// Send errors back through channel
 	if len(err) > 0 {
 		errChan <- errors.Join(err...)
@@ -264,134 +276,146 @@ func ValidateRegister(reg *Register, regmap *Regmap, errChan chan <- error, wg *
 		}
 	}
 
-	// Going through each bitfield reference
-	for refIdx, ref := range reg.BitfieldReference {
-		// Rule: Bitfield Reference does not match any defined Bitfields
-		// Grab the bitfield corresponds to this bitfield reference
-		var bitfield Bitfield
-		if ref.BfName != "" {
-			for _, bf := range bitfields {
-				if bf.Name == ref.BfName {
-					bitfield = bf
+	// Going through each bitfield reference if declared (error otherwise)
+	if len(reg.BitfieldReference) == 0 {
+		if reg.Name == "" {
+			err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
+				" no bitfield reference declared.",
+				reg.ID))
+		} else {
+			err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
+				" no bitfield reference declared.",
+				reg.Name))
+		}
+	} else {
+		for refIdx, ref := range reg.BitfieldReference {
+			// Rule: Bitfield Reference does not match any defined Bitfields
+			// Grab the bitfield corresponds to this bitfield reference
+			var bitfield Bitfield
+			if ref.BfName != "" {
+				for _, bf := range bitfields {
+					if bf.Name == ref.BfName {
+						bitfield = bf
+					}
+				}
+				if bitfield.Name == "" {
+					if reg.Name == "" {
+						err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
+							" a bitfield reference name does not match any defined bitfields.",
+							reg.ID))
+					} else {
+						err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
+							" a bitfield reference name does not match any defined bitfields.",
+							reg.Name))
+					}
 				}
 			}
-			if bitfield.Name == "" {
+
+			// Rule: Register Offset exist check
+			if ref.RegOffset == nil {
 				if reg.Name == "" {
 					err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
-						" a bitfield reference name does not match any defined bitfields.",
+						" a bitfield reference register offset is not explicitly declared.",
 						reg.ID))
 				} else {
 					err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
-						" a bitfield reference name does not match any defined bitfields.",
+						" a bitfield reference register offset is not explicitly declared.",
 						reg.Name))
 				}
 			}
-		}
 
-		// Rule: Register Offset exist check
-		if ref.RegOffset == nil {
-			if reg.Name == "" {
-				err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
-					" a bitfield reference register offset is not explicitly declared.",
-					reg.ID))
-			} else {
-				err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
-					" a bitfield reference register offset is not explicitly declared.",
-					reg.Name))
+			// Rule: Slice Start Index exist check
+			if ref.SliceStartIdx == nil {
+				if reg.Name == "" {
+					err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
+						" a bitfield reference slice start index is not explicitly declared.",
+						reg.ID))
+				} else {
+					err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
+						" a bitfield reference slice start index is not explicitly declared.",
+						reg.Name))
+				}
 			}
-		}
 
-		// Rule: Slice Start Index exist check
-		if ref.SliceStartIdx == nil {
-			if reg.Name == "" {
-				err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
-					" a bitfield reference slice start index is not explicitly declared.",
-					reg.ID))
-			} else {
-				err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
-					" a bitfield reference slice start index is not explicitly declared.",
-					reg.Name))
+			// Rule: Slice Width exist check
+			if ref.SliceWidth == nil || *ref.SliceWidth == 0 {
+				if reg.Name == "" {
+					err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
+						" a bitfield reference slice width is 0 or not explicitly declared.",
+						reg.ID))
+				} else {
+					err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
+						" a bitfield reference slice width is 0 or not explicitly declared.",
+						reg.Name))
+				}
 			}
-		}
 
-		// Rule: Slice Width exist check
-		if ref.SliceWidth == nil || *ref.SliceWidth == 0 {
-			if reg.Name == "" {
-				err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
-					" a bitfield reference slice width is 0 or not explicitly declared.",
-					reg.ID))
-			} else {
-				err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
-					" a bitfield reference slice width is 0 or not explicitly declared.",
-					reg.Name))
+			// Rule: Bitfield Name exist check
+			if ref.BfName == "" {
+				if reg.Name == "" {
+					err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
+						" a bitfield reference name is empty or not explicitly declared.",
+						reg.ID))
+				} else {
+					err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
+						" a bitfield reference name is empty or not explicitly declared.",
+						reg.Name))
+				}
 			}
-		}
 
-		// Rule: Bitfield Name exist check
-		if ref.BfName == "" {
-			if reg.Name == "" {
-				err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
-					" a bitfield reference name is empty or not explicitly declared.",
-					reg.ID))
-			} else {
-				err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
-					" a bitfield reference name is empty or not explicitly declared.",
-					reg.Name))
+			// Rule: Register Offset + Slice Width exceed Register Width
+			if ref.RegOffset != nil && ref.SliceWidth != nil && regWidth != nil && 
+			*ref.RegOffset + *ref.SliceWidth > *regWidth {
+				if reg.Name == "" {
+					err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
+						" a bitfield reference register offset + slice width exceeds" +
+						" register width.", reg.ID))
+				} else {
+					err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
+						" a bitfield reference register offset + slice width exceeds" +
+						" register width.", reg.Name))
+				}
 			}
-		}
 
-		// Rule: Register Offset + Slice Width exceed Register Width
-		if ref.RegOffset != nil && ref.SliceWidth != nil && regWidth != nil && 
-		*ref.RegOffset + *ref.SliceWidth > *regWidth {
-			if reg.Name == "" {
-				err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
-					" a bitfield reference register offset + slice width exceeds" +
-					" register width.", reg.ID))
-			} else {
-				err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
-					" a bitfield reference register offset + slice width exceeds" +
-					" register width.", reg.Name))
+			// Rule: Slice Start Index + Slice Width exceed bitfield width
+			if ref.SliceStartIdx != nil && ref.SliceWidth != nil && bitfield.Name != "" &&
+			*ref.SliceStartIdx > *bitfield.Width - 1 {
+				if reg.Name == "" {
+					err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
+						" a bitfield reference slice start index + slice width exceeds" +
+						" bitfield width.", reg.ID))
+				} else {
+					err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
+						" a bitfield reference slice start index + slice width exceeds" +
+						" bitfield width.", reg.Name))
+				}
 			}
-		}
 
-		// Rule: Slice Start Index + Slice Width exceed bitfield width
-		if ref.SliceStartIdx != nil && ref.SliceWidth != nil && bitfield.Name != "" &&
-		*ref.SliceStartIdx > *bitfield.Width - 1 {
-			if reg.Name == "" {
-				err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
-					" a bitfield reference slice start index + slice width exceeds" +
-					" bitfield width.", reg.ID))
-			} else {
-				err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
-					" a bitfield reference slice start index + slice width exceeds" +
-					" bitfield width.", reg.Name))
-			}
-		}
-
-		// Rule: Bitfield reference overlap
-		var startIdx0, endIdx0 uint64;
-		if ref.RegOffset != nil && ref.SliceWidth != nil {
-			// Get start and end index of this bitfield reference in the register
-			startIdx0 = *ref.RegOffset
-			endIdx0 = *ref.RegOffset + *ref.SliceWidth - 1
-			// Going through each other bitfield reference skipping itself
-			// to get start and end index in register
-			for refIdx2 := refIdx + 1; refIdx2 < len(reg.BitfieldReference); refIdx2++ {
-				ref2 := reg.BitfieldReference[refIdx2]
-				if ref.BfName != ref2.BfName {
-					var startIdx1, endIdx1 uint64;
-					if ref2.RegOffset != nil && ref2.SliceWidth != nil {
-						// Get start and end index
-						startIdx1 = *ref2.RegOffset
-						endIdx1 = *ref2.RegOffset + *ref2.SliceWidth - 1
-						// Check if the ranges overlap (or don't overlap)
-						if !(startIdx0 > endIdx1 || startIdx1 > endIdx0) {
-							if reg.Name == "" {
-								err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
-									" there are overlapping bitfields in this register.", reg.ID))
-							} else {
-								err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
-									" there are overlapping bitfields in this register.", reg.Name))
+			// Rule: Bitfield reference overlap
+			var startIdx0, endIdx0 uint64;
+			if ref.RegOffset != nil && ref.SliceWidth != nil {
+				// Get start and end index of this bitfield reference in the register
+				startIdx0 = *ref.RegOffset
+				endIdx0 = *ref.RegOffset + *ref.SliceWidth - 1
+				// Going through each other bitfield reference skipping itself
+				// to get start and end index in register
+				for refIdx2 := refIdx + 1; refIdx2 < len(reg.BitfieldReference); refIdx2++ {
+					ref2 := reg.BitfieldReference[refIdx2]
+					if ref.BfName != ref2.BfName {
+						var startIdx1, endIdx1 uint64;
+						if ref2.RegOffset != nil && ref2.SliceWidth != nil {
+							// Get start and end index
+							startIdx1 = *ref2.RegOffset
+							endIdx1 = *ref2.RegOffset + *ref2.SliceWidth - 1
+							// Check if the ranges overlap (or don't overlap)
+							if !(startIdx0 > endIdx1 || startIdx1 > endIdx0) {
+								if reg.Name == "" {
+									err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
+										" there are overlapping bitfields in this register.", reg.ID))
+								} else {
+									err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
+										" there are overlapping bitfields in this register.", reg.Name))
+								}
 							}
 						}
 					}
