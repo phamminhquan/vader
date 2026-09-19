@@ -17,10 +17,6 @@ type Register struct {
 	ID int
 	Name string `toml:"name"`
 	Address *uint64 `toml:"address"`
-	Repetition struct {
-		Times *uint64 `toml.first-index`
-		AddressIncrement *uint64 `toml:"address-increment"`
-	} `toml:"repetition"`
 	BitfieldReference []struct {
 		RegOffset *uint64 `toml:"reg-offset"`
 		SliceStartIdx *uint64 `toml:"slice-start-idx"`

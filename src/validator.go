@@ -254,28 +254,6 @@ func ValidateRegister(reg *Register, regmap *Regmap, errChan chan <- error, wg *
 		}
 	}
 
-	// Rule: Repetition Times exist check
-	if reg.Repetition.Times == nil {
-		if reg.Name == "" {
-			err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
-				" repetition times is not explicitly declared.", reg.ID))
-		} else {
-			err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
-				" repetition times is not explicitly declared.", reg.Name))
-		}
-	}
-
-	// Rule: Address Increment exist check
-	if reg.Repetition.AddressIncrement == nil {
-		if reg.Name == "" {
-			err = append(err, fmt.Errorf("[ERROR] Register ID %d:" +
-				" repetition address increment is not explicitly declared.", reg.ID))
-		} else {
-			err = append(err, fmt.Errorf("[ERROR] Register name %s:" +
-				" repetition address increment is not explicitly declared.", reg.Name))
-		}
-	}
-
 	// Going through each bitfield reference if declared (error otherwise)
 	if len(reg.BitfieldReference) == 0 {
 		if reg.Name == "" {
@@ -444,15 +422,8 @@ wg *sync.WaitGroup) {
 	// Use a map from address to an array of bitfield names
 	overlap := make(map[uint64][]string)
 	for _, reg := range regmap.Registers {
-		if reg.Address != nil && reg.Repetition.Times != nil &&
-		reg.Repetition.AddressIncrement != nil {
-			var i uint64
-			for i = 0; i < *reg.Repetition.Times + 1; i++ {
-				addr := *reg.Address + i * (*reg.Repetition.AddressIncrement)
-				if !slices.Contains(overlap[addr], reg.Name) {
-					overlap[addr] = append(overlap[addr], reg.Name)
-				}
-			}
+		if reg.Address != nil && !slices.Contains(overlap[*reg.Address], reg.Name) {
+			overlap[*reg.Address] = append(overlap[*reg.Address], reg.Name)
 		}
 	}
 
