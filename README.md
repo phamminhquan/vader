@@ -17,16 +17,15 @@ env -i \
 
 You can specify the path to your own TOML file via the `-toml` argument. The
 generated RTL will be printed to stdout, which can be piped to a file.
-```
-```
 
 # Web Demo
-I deployed a [Github IO page](phamminhquan.github.io/vader) for this repository
-as a demo. In the demo, you can write your own register map TOML file. There is
-a "EXECUTION LOGS" textbox that will display the TOML validation result to make sure
-that your TOML file adhere to the correct format, which I will mention in the
-following section. If your TOML passed the validation, the RTL will be generated
-and displayed in the "GENERATED RTL" textbox.
+I deployed a Github IO page for this repository
+as a demo at `phamminhquan.github.io/vader/`. In the demo, you can write your
+own register map TOML file. There is a "EXECUTION LOGS" textbox that will
+display the TOML validation result to make sure that your TOML file adhere to
+the correct format, which I will mention in the following section. If your
+TOML passed the validation, the RTL will be generated and displayed in the
+"GENERATED RTL" textbox.
 
 # TOML format
 I've provided an example TOML file in `example/example-regmap.toml`. Here are
