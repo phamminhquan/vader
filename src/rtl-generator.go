@@ -77,25 +77,47 @@ func GenRTL(regmap *Regmap) string {
 	rtlString += ApbLogic
 	
 	// Add the actual register logic
-	rtlString += fmt.Sprintf("// Registers and write logic\n")
+	rtlString += "//=============================================================================\n"
+	rtlString += "// Register and write logic\n"
+	rtlString += "//=============================================================================\n\n"
+	// Set up the strings needed for both write/read logic
+	var prdataStr string
 	for _, reg := range regmap.Registers {
 		// Grab the strings needed from each bitfield reference
 		var bitfieldDefaultStr string
 		var bitfieldWriteStr string
+		var bitfieldReadStr string
 		for _, ref := range reg.BitfieldReference {
 			if accessMap[ref.BfName] == "RW" || accessMap[ref.BfName] == "WO" {
+				if *ref.SliceWidth == 1 {
+					bitfieldDefaultStr += fmt.Sprintf("    O_%s[%d] <= '0;\n",
+						ref.BfName, *ref.SliceStartIdx)
+				} else {
+					bitfieldDefaultStr += fmt.Sprintf("    O_%s[%d:%d] <= '0;\n",
+						ref.BfName, *ref.SliceStartIdx + *ref.SliceWidth - 1,
+						*ref.SliceStartIdx)
+				}
 				var j uint64
 				for j = 0; j < *ref.SliceWidth; j++ {
-					bitfieldDefaultStr += fmt.Sprintf("    O_%s[%d] <= '0;\n",
-						ref.BfName, *ref.SliceStartIdx + j)
 					bitfieldWriteStr += fmt.Sprintf("    O_%s[%d] <= pstrb[%d] & pwdata[%d]\n",
 						ref.BfName, *ref.SliceStartIdx + j, (*ref.RegOffset + j) / 8,
 						*ref.RegOffset + j)
 				}
 			}
+			// Grab the strings needed from each bitfield reference for read
+			if accessMap[ref.BfName] == "RW" || accessMap[ref.BfName] == "RO" {
+				if *ref.SliceWidth == 1 {
+					bitfieldReadStr += fmt.Sprintf("  rdata_%s[%d] = O_%s[%d];\n",
+						reg.Name, *ref.RegOffset, ref.BfName, *ref.SliceStartIdx)
+				} else {
+					bitfieldReadStr += fmt.Sprintf("  rdata_%s[%d:%d] = O_%s[%d:%d];\n",
+						reg.Name, *ref.RegOffset + *ref.SliceWidth - 1, *ref.RegOffset,
+						ref.BfName, *ref.SliceStartIdx + *ref.SliceWidth - 1, *ref.SliceWidth)
+				}
+			}
 		}
 
-		// Register string (skip if there is no bitfield to write)
+		// Register write string (skip if there is no bitfield to write)
 		if bitfieldDefaultStr != "" {
 			rtlString += fmt.Sprintf("// Register at address 32'h%08x\n", *reg.Address)
 			rtlString += fmt.Sprintf("always_ff @(posedge clk or negedge rst_n) begin\n")
@@ -106,9 +128,32 @@ func GenRTL(regmap *Regmap) string {
 			rtlString += fmt.Sprintf("  end\n")
 			rtlString += fmt.Sprintf("end\n\n")
 		}
+		
+		// Register read string (skip if there is no bitfield to read)
+		rtlString += fmt.Sprintf("// Readback wire\n")
+		rtlString += fmt.Sprintf("reg[31:0] rdata_%s;\n", reg.Name)
+		rtlString += fmt.Sprintf("always_comb begin\n")
+		rtlString += fmt.Sprintf("  rdata_%s = '0;\n", reg.Name)
+		if bitfieldReadStr != "" {
+			rtlString += bitfieldReadStr
+		}
+		rtlString += fmt.Sprintf("end\n\n")
+
+		// Setup read data output assignment string
+		prdataStr += fmt.Sprintf("    32'h%08x: prdata = rdata_%s;\n",
+			*reg.Address, reg.Name)
 	}
 	
 	// TODO: add output assignment
+	rtlString += "//=============================================================================\n"
+	rtlString += "// Readback data muxing\n"
+	rtlString += "//=============================================================================\n\n"
+	rtlString += fmt.Sprintf("always_comb begin\n")
+	rtlString += fmt.Sprintf("  case (paddr)\n")
+	rtlString += prdataStr
+	rtlString += fmt.Sprintf("  default: prdata = '0;\n")
+	rtlString += fmt.Sprintf("  endcase\n")
+	rtlString += fmt.Sprintf("end\n")
 
 	rtlString += fmt.Sprintf("endmodule\n")
 	
