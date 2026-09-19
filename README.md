@@ -3,6 +3,23 @@ This repository contains a Golang based register map RTL generator where:
 * Register map management file is TOML format
 * Golang based register map validation and RTL generation
 
+# Running Locally
+You can run the program with the following command:
+
+```bash
+env -i \
+  HOME=$HOME \
+  PATH="$PATH:$(go env GOROOT)/lib/wasm" \
+  GOOS=js \
+  GOARCH=wasm \
+  go run ./src/ -test -toml="example/example-regmap.toml"
+```
+
+You can specify the path to your own TOML file via the `-toml` argument. The
+generated RTL will be printed to stdout, which can be piped to a file.
+```
+```
+
 # Web Demo
 I deployed a [Github IO page](phamminhquan.github.io/vader) for this repository
 as a demo. In the demo, you can write your own register map TOML file. There is
@@ -40,5 +57,3 @@ At the same, this is my first time learning Golang and I found that it is faster
 and more enjoyable to write than Python (which I would have used in the past
 for stuff like this).
 
-# TODO
-* Create a CLI tool-set (binaries) that would do the functionality in terminal

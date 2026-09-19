@@ -7,9 +7,9 @@ import (
 )
 
 // Function to test locally
-func LocalTest() {
+func LocalTest(tomlPath string) {
 	// Read example toml
-	fileBytes, err := os.ReadFile("example/example-regmap.toml")
+	fileBytes, err := os.ReadFile(tomlPath)
 	if err != nil {
 		fmt.Printf("[FATAL] Failed to read TOML file: %v", err)
 		return
@@ -32,7 +32,6 @@ func LocalTest() {
 	}
 	
 	// Generate RTL
-	fmt.Printf("[INFO] Validation Passed.\n")
 	fmt.Printf("%s", GenRTL(&regmap))
 	return	
 }

@@ -170,7 +170,7 @@ func GenRTL(regmap *Regmap) string {
 	rtlString += "    default: pslverr = 1'b1;\n"
 	rtlString += "    endcase\n"
 	rtlString += "  end\n"
-	rtlString += "end\n"
+	rtlString += "end\n\n"
 
 	rtlString += fmt.Sprintf("endmodule\n")
 	

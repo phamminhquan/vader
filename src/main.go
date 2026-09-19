@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"flag"
 )
 
@@ -35,17 +34,18 @@ type Regmap struct {
 // Main function bind the processText to JS and keep the program alive
 func main() {
 	// Parse commandline argument using flags
-	localTestFlag := flag.Bool("test", false, "Run local test")
+	localFlag := flag.Bool("local", false,
+		"Running this command in local mode. Generated RTL will be printed to stdout.")
+	tomlPath := flag.String("toml", "example/example-regmap.toml",
+		"Path to toml file to process locally")
 
 	// Crucial: must call flag.Parse() to executre the parsing
 	flag.Parse()
 
 	// Local test
-	if *localTestFlag == true {
-		fmt.Printf("[INFO] Running local test mode.\n")
-		LocalTest()
+	if *localFlag == true {
+		LocalTest(*tomlPath)
 	} else {
-		fmt.Printf("[INFO] Running web-demo mode.\n")
 		JsBind()
 		select {}	// Block forever to keep instance alive
 	}

@@ -7,5 +7,5 @@ env -i \
   PATH="$PATH:$(go env GOROOT)/lib/wasm" \
   GOOS=js \
   GOARCH=wasm \
-  go run ./src/ -test
+  go run ./src/ -local
 
