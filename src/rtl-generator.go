@@ -23,9 +23,8 @@ const ApbLogic string = "" +
 "always_comb pready = 1'b1;\n" +
 "always_comb pslverr = 1'b0;\n" +
 "\n" +
-"// Transfer flags when transfer is valid and if it its write request\n" +
-"wire trans_valid = (psel & penable);\n" +
-"wire wstrb = (trans_valid & pwrite);\n\n"
+"// Flag when transfer is a valid write request\n" +
+"wire wstrb = (psel & penable & pwrite);\n\n"
 
 // Function to write SV file using info in regmap
 func GenRTL(regmap *Regmap) string {
@@ -61,16 +60,16 @@ func GenRTL(regmap *Regmap) string {
 		}
 	}
 	rtlString += fmt.Sprintf("\n  // APB bus,\n")
-	rtlString += fmt.Sprintf("  input  [31:0]  I_paddr,\n")
-	rtlString += fmt.Sprintf("  input  [2:0]   I_pprot,\n")
-	rtlString += fmt.Sprintf("  input          I_psel,\n")
-	rtlString += fmt.Sprintf("  input          I_penable,\n")
-	rtlString += fmt.Sprintf("  input          I_pwrite,\n")
-	rtlString += fmt.Sprintf("  input  [31:0]  I_pwdata,\n")
-	rtlString += fmt.Sprintf("  input  [3:0]   I_pstrb,\n")
-	rtlString += fmt.Sprintf("  output         O_pready,\n")
-	rtlString += fmt.Sprintf("  output         O_pslverr,\n")
-	rtlString += fmt.Sprintf("  output [31:0]  O_prdata\n")
+	rtlString += fmt.Sprintf("  input  [31:0]      I_paddr,\n")
+	rtlString += fmt.Sprintf("  input  [2:0]       I_pprot,\n")
+	rtlString += fmt.Sprintf("  input              I_psel,\n")
+	rtlString += fmt.Sprintf("  input              I_penable,\n")
+	rtlString += fmt.Sprintf("  input              I_pwrite,\n")
+	rtlString += fmt.Sprintf("  input  [31:0]      I_pwdata,\n")
+	rtlString += fmt.Sprintf("  input  [3:0]       I_pstrb,\n")
+	rtlString += fmt.Sprintf("  output reg         O_pready,\n")
+	rtlString += fmt.Sprintf("  output reg         O_pslverr,\n")
+	rtlString += fmt.Sprintf("  output reg [31:0]  O_prdata\n")
 	rtlString += fmt.Sprintf(");\n\n")
 
 	// Add APB boiler plate logic
@@ -153,7 +152,7 @@ func GenRTL(regmap *Regmap) string {
 	rtlString += prdataStr
 	rtlString += fmt.Sprintf("  default: prdata = '0;\n")
 	rtlString += fmt.Sprintf("  endcase\n")
-	rtlString += fmt.Sprintf("end\n")
+	rtlString += fmt.Sprintf("end\n\n")
 
 	rtlString += fmt.Sprintf("endmodule\n")
 	

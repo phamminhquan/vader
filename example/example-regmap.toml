@@ -23,6 +23,7 @@ width = 1
 default-value = 0b0
 access = "RW"
 
+# Array of tables of registers
 [[register]]
 name = "reg0"
 address = 0x0000_0000
