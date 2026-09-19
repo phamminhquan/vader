@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"syscall/js"
-
 	"github.com/pelletier/go-toml/v2"
 )
 

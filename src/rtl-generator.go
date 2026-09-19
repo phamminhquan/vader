@@ -84,10 +84,10 @@ func GenRTL(regmap *Regmap) string {
 		var bitfieldWriteStr string
 		for _, ref := range reg.BitfieldReference {
 			if accessMap[ref.BfName] == "RW" || accessMap[ref.BfName] == "WO" {
-				bitfieldDefaultStr += fmt.Sprintf("    O_%s[%d:%d] <= '0;\n",
-					ref.BfName, *ref.SliceStartIdx + *ref.SliceWidth - 1, *ref.SliceStartIdx)
 				var j uint64
 				for j = 0; j < *ref.SliceWidth; j++ {
+					bitfieldDefaultStr += fmt.Sprintf("    O_%s[%d] <= '0;\n",
+						ref.BfName, *ref.SliceStartIdx + j)
 					bitfieldWriteStr += fmt.Sprintf("    O_%s[%d] <= pstrb[%d] & pwdata[%d]\n",
 						ref.BfName, *ref.SliceStartIdx + j, (*ref.RegOffset + j) / 8,
 						*ref.RegOffset + j)
@@ -95,14 +95,17 @@ func GenRTL(regmap *Regmap) string {
 			}
 		}
 
-		// Register string
-		rtlString += fmt.Sprintf("always_ff @(posedge clk or negedge rst_n) begin\n")
-		rtlString += fmt.Sprintf("  if (!rst_n) begin\n")
-		rtlString += bitfieldDefaultStr
-		rtlString += fmt.Sprintf("  end else if (wstrb & (paddr == 32'h%08x)) begin\n", reg.Address)
-		rtlString += bitfieldWriteStr
-		rtlString += fmt.Sprintf("  end\n")
-		rtlString += fmt.Sprintf("end\n")
+		// Register string (skip if there is no bitfield to write)
+		if bitfieldDefaultStr != "" {
+			rtlString += fmt.Sprintf("// Register at address 32'h%08x\n", *reg.Address)
+			rtlString += fmt.Sprintf("always_ff @(posedge clk or negedge rst_n) begin\n")
+			rtlString += fmt.Sprintf("  if (!rst_n) begin\n")
+			rtlString += bitfieldDefaultStr
+			rtlString += fmt.Sprintf("  end else if (wstrb & (paddr == 32'h%08x)) begin\n", *reg.Address)
+			rtlString += bitfieldWriteStr
+			rtlString += fmt.Sprintf("  end\n")
+			rtlString += fmt.Sprintf("end\n\n")
+		}
 	}
 	
 	// TODO: add output assignment
