@@ -31,7 +31,7 @@ const ApbLogic string = "" +
 func GenRTL(regmap *Regmap) string {
 	// Create file string and other useful variables
 	var rtlString string
-	var bitfieldMap map[string]Bitfield // Bitfields struct maped to bitfield name
+	var accessMap map[string]string // Bitfields struct maped to bitfield name
 
 	// Writing to SV file
 	rtlString += SvHeader
@@ -41,8 +41,8 @@ func GenRTL(regmap *Regmap) string {
 	rtlString += fmt.Sprintf("  input I_rst_n,\n\n")
 	rtlString += fmt.Sprintf("  // Bitfields\n")
 	for _, bf := range regmap.Bitfields {
-		// Construct bitfieldMap for later use
-		bitfieldMap[bf.Name] = bf
+		// Construct accessMap for later use
+		accessMap[bf.Name] = bf.Access
 		if bf.Access == "RW" {
 			if *bf.Width == 1 {
 				rtlString += fmt.Sprintf("  output reg O_%s,\n", bf.Name)
@@ -83,7 +83,7 @@ func GenRTL(regmap *Regmap) string {
 		var bitfieldDefaultStr string
 		var bitfieldWriteStr string
 		for _, ref := range reg.BitfieldReference {
-			if bitfieldMap[ref.BfName].Access == "RW" || bitfieldMap[ref.BfName].Access == "WO" {
+			if accessMap[ref.BfName] == "RW" || accessMap[ref.BfName] == "WO" {
 				bitfieldDefaultStr += fmt.Sprintf("    O_%s[%d:%d] <= '0;\n",
 					ref.BfName, *ref.SliceStartIdx + *ref.SliceWidth - 1, *ref.SliceStartIdx)
 				var j uint64
