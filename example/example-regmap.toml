@@ -14,7 +14,7 @@ access = "RW"
 [[bitfield]]
 name = "flag"
 width = 1
-default-value = 0b11
+default-value = 0b1
 access = "RO"
 
 [[bitfield]]
@@ -23,29 +23,18 @@ width = 1
 default-value = 0b0
 access = "RW"
 
-[[bitfield]]
-name = "test1"
-default-value = 0b0
-access = "RW"
-
-[[bitfield]]
-name = "test1"
-width = 1
-default-value = 0b0
-access = "RWI"
-
 [[register]]
 name = "reg0"
 address = 0x0000_0000
 repetition = { times = 0, address-increment = 0x0000_0004 }
 bitfield-reference = [
   { reg-offset = 0, slice-start-idx = 0, slice-width = 2, bf-name = "mask" },
-  { reg-offset = 0, slice-start-idx = 0, slice-width = 1, bf-name = "enable" },
+  { reg-offset = 8, slice-start-idx = 0, slice-width = 1, bf-name = "enable" },
 ]
 
 [[register]]
 name = "reg1"
-address = 0x0000_0000
+address = 0x0000_0004
 repetition = { times = 1, address-increment = 0x0000_0004 }
 bitfield-reference = [
   { reg-offset = 0, slice-start-idx = 0, slice-width = 1, bf-name = "flag" },

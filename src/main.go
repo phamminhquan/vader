@@ -82,6 +82,9 @@ func processText(this js.Value, args []js.Value) any {
 
 // Main function bind the processText to JS and keep the program alive
 func main() {
+	//// Local test
+	//LocalTest()
+
 	// Expose the Go function to the browser window object
 	js.Global().Set("goProcessText", js.FuncOf(processText))
 

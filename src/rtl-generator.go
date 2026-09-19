@@ -31,7 +31,7 @@ const ApbLogic string = "" +
 func GenRTL(regmap *Regmap) string {
 	// Create file string and other useful variables
 	var rtlString string
-	var accessMap map[string]string // Bitfields struct maped to bitfield name
+	accessMap := make(map[string]string) // Bitfields struct maped to bitfield name
 
 	// Writing to SV file
 	rtlString += SvHeader
