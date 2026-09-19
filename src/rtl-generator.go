@@ -21,10 +21,10 @@ const ApbLogic string = "" +
 "\n" +
 "// PREADY always 1 (no waited transactions)\n" +
 "always_comb pready = 1'b1;\n" +
-"always_comb pslverr = 1'b0;\n" +
 "\n" +
 "// Flag when transfer is a valid write request\n" +
-"wire wstrb = (psel & penable & pwrite);\n\n"
+"wire trans_valid = (psel & penable);\n" +
+"wire wstrb = (trans_valid & pwrite);\n\n"
 
 // Function to write SV file using info in regmap
 func GenRTL(regmap *Regmap) string {
@@ -81,6 +81,7 @@ func GenRTL(regmap *Regmap) string {
 	rtlString += "//=============================================================================\n\n"
 	// Set up the strings needed for both write/read logic
 	var prdataStr string
+	var errorResponseStr string
 	for _, reg := range regmap.Registers {
 		// Grab the strings needed from each bitfield reference
 		var bitfieldDefaultStr string
@@ -141,9 +142,13 @@ func GenRTL(regmap *Regmap) string {
 		// Setup read data output assignment string
 		prdataStr += fmt.Sprintf("    32'h%08x: prdata = rdata_%s;\n",
 			*reg.Address, reg.Name)
+
+		// Setup error handling string
+		errorResponseStr += fmt.Sprintf("      32'h%08x: pslverr = 1'b0;\n",
+			*reg.Address)
 	}
 	
-	// TODO: add output assignment
+	// Add output assignment
 	rtlString += "//=============================================================================\n"
 	rtlString += "// Readback data muxing\n"
 	rtlString += "//=============================================================================\n\n"
@@ -153,6 +158,19 @@ func GenRTL(regmap *Regmap) string {
 	rtlString += fmt.Sprintf("  default: prdata = '0;\n")
 	rtlString += fmt.Sprintf("  endcase\n")
 	rtlString += fmt.Sprintf("end\n\n")
+
+	// PSLVERR handling
+	rtlString += "//=============================================================================\n"
+	rtlString += "// APB error response: transfer request for unmapped address\n"
+	rtlString += "//=============================================================================\n\n"
+	rtlString += "always_comb begin\n"
+	rtlString += "  if (trans_valid) begin\n"
+	rtlString += "    case (paddr)\n"
+	rtlString += errorResponseStr
+	rtlString += "    default: pslverr = 1'b1;\n"
+	rtlString += "    endcase\n"
+	rtlString += "  end\n"
+	rtlString += "end\n"
 
 	rtlString += fmt.Sprintf("endmodule\n")
 	
